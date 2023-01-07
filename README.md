@@ -22,10 +22,10 @@ Retrieve data from your FitBit
     pip install -r requirements.txt -e .
     ```
    
-3. Install `matplotlib` for plotting:
+3. Install `matplotlib` and `pandas` for the scripts:
 
     ```bash
-    pip install matplotlib
+    pip install matplotlib pandas
     ```
 
 4. Generate a self-signed SSL certificate.
@@ -102,3 +102,19 @@ python scripts/spo2.py
 python scripts/br.py
 ```
 
+## Scrape Everything, Starting Yesterday
+
+```bash
+python scripts/scrape.py
+```
+
+After you're happy, run the following to collate the data into nice 
+data frames:
+```bash
+python scripts/scrape_collate.py
+```
+
+After you've done this, you can do something with the scraped data:
+```bash
+python scripts/scrape_do.py
+```
