@@ -17,14 +17,30 @@ current = datetime.datetime.now() - datetime.timedelta(days=1)
 def fetch_and_dump(path, api_call, day):
     out = path / day.strftime("%Y-%m-%d.csv")
     if not out.exists():
-        df = api_call(authenticate(), day)
-        df.to_csv(str(out))
+        try:
+            df = api_call(authenticate(), day)
+            df.to_csv(str(out))
+            return True
+        except Exception as e:
+            print(f'Failed "{out}" with the following exception:', type(e), str(e))
+            return False
+    else:
+        return True
 
+
+# How many days without any data before stopping scraping?
+allowance = 10
 
 while True:
     print("Current day:", current.strftime("%Y-%m-%d"))
-    fetch_and_dump(out_dir / "hr", hr, current)
-    fetch_and_dump(out_dir / "hrv", hrv, current)
-    fetch_and_dump(out_dir / "br", br, current)
-    fetch_and_dump(out_dir / "spo2", spo2, current)
-    current -= datetime.timedelta(days=1)
+    any_available = False
+    any_available |= fetch_and_dump(out_dir / "hr", hr, current)
+    any_available |= fetch_and_dump(out_dir / "hrv", hrv, current)
+    any_available |= fetch_and_dump(out_dir / "br", br, current)
+    any_available |= fetch_and_dump(out_dir / "spo2", spo2, current)
+    if not any_available:
+        allowance -= 1
+        if allowance == 0:
+            break
+    else:
+        current -= datetime.timedelta(days=1)
