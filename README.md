@@ -1,5 +1,6 @@
 # [FitBit](http://github.com/wesselb/fitbit)
 
+[![CI](https://github.com/wesselb/fitbit/workflows/CI/badge.svg?branch=main)](https://github.com/wesselb/fitbit/actions?query=workflow%3ACI)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Retrieve data from your FitBit
