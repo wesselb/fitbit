@@ -10,7 +10,8 @@ class RateLimiter:
     """Rate limiter.
 
     Args:
-        frequency (float): Frequency of allowed requests.
+        frequency (float, optional): Frequency of allowed requests. Defaults to
+            `150 / 3600` Hz.
     """
 
     def __init__(self, frequency: float = 150 / 3600):
