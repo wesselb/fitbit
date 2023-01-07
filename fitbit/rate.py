@@ -19,11 +19,15 @@ class RateLimiter:
 
     def __enter__(self):
         now = timestamp()
-        while now < self.last + 1 / self.frequency:
+        # Sleep to ensure that we don't exceed the rate limit.
+        while self.last + 1 / self.frequency > now:
             to_sleep = self.last + 1 / self.frequency - now
             print(f"Waiting {to_sleep:.1f} seconds to not exceed API rate limit.")
-            time.sleep(to_sleep)
+            # Add 10 milliseconds to ensure that we _really_ slept enough.
+            time.sleep(to_sleep + 0.01)
             now = timestamp()
+
+        # We're good now.
         self.last = now
         config["session", "last_api_request_timestamp_utc"] = now
 

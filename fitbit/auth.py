@@ -51,19 +51,24 @@ def authenticate() -> str:
 
     if not config["session", "token"]:
         # There is no token. Perform full authentication.
-        return _full_authentication(config)
+        return _full_authentication()
     elif (
         config["session", "token"]
         and timestamp() >= config["session", "token_expiry_timestamp_utc"] - 1
     ):
         # There is a token, but it expired. Use the refresh token.
-        return _refresh_token(config)
+        return _refresh_token()
     else:
         # There is a token, and it has not yet expired. Use it.
         return config["session", "token"]
 
 
-def _full_authentication(config, verifier_length=60, port=4444):
+def _basic_auth() -> str:
+    basic_auth = config["app", "client_id"] + ":" + config["app", "client_secret"]
+    return urlsafe_b64encode(basic_auth.encode()).decode()
+
+
+def _full_authentication(verifier_length=60, port=4444):
     # Generate a verifier and a challenge.
     verifier = "".join(random.choice(string.digits) for _ in range(verifier_length))
     verifier_hashed = hashlib.sha256(verifier.encode("utf-8")).digest()
@@ -130,28 +135,44 @@ def _full_authentication(config, verifier_length=60, port=4444):
         os.system("open -a Terminal")
 
     # Swap authentication code for token.
-    basic_auth = config["app", "client_id"] + ":" + config["app", "client_secret"]
-    basic_auth = urlsafe_b64encode(basic_auth.encode()).decode()
     with rate_limiter:
         res = requests.post(
             "https://api.fitbit.com/oauth2/token",
             data={
+                "grant_type": "authorization_code",
                 "client_id": config["app", "client_id"],
                 "code": authentication_code,
                 "code_verifier": verifier,
-                "grant_type": "authorization_code",
             },
             headers={
                 "Content-Type": "application/x-www-form-urlencoded",
-                "Authorization": f"Basic {basic_auth}",
+                "Authorization": f"Basic {_basic_auth()}",
             },
         )
     res.raise_for_status()
-    res = res.json()
+    return _store_token(res.json())
 
-    # Great success! Store everything.
+
+def _refresh_token():
+    with rate_limiter:
+        res = requests.post(
+            "https://api.fitbit.com/oauth2/token",
+            data={
+                "grant_type": "refresh_token",
+                "client_id": config["app", "client_id"],
+                "refresh_token": config["session", "refresh_token"],
+            },
+            headers={
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Authorization": f"Basic {_basic_auth()}",
+            },
+        )
+    res.raise_for_status()
+    return _store_token(res.json())
+
+
+def _store_token(res):
     config["session", "token"] = res["access_token"]
     config["session", "token_expiry_timestamp_utc"] = timestamp() + res["expires_in"]
     config["session", "refresh_token"] = res["refresh_token"]
-
     return config["session", "token"]
