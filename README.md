@@ -78,9 +78,27 @@ This should only happen once.
 
 You can now run any script, such as any of the below.
 
-## Plot Your Heart Rate
+## Plot Today's Heart Rate
 
 ```bash
-python scripts/heart_rate.py
+python scripts/hr.py
+```
+
+## Plot Today's Heart Rate Variability
+
+```bash
+python scripts/hrv.py
+```
+
+## Plot Today's Oxygenation
+
+```bash
+python scripts/spo2.py
+```
+
+## Show Today's Breathing Rate
+
+```bash
+python scripts/br.py
 ```
 
