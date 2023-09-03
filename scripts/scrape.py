@@ -1,15 +1,17 @@
 import datetime
 from pathlib import Path
 
+import fitbit.api as api
 import pandas as pd
-from fitbit import authenticate, br, hr, hrv, spo2
+from fitbit import authenticate
+
+# Get all API calls.
+api_calls = api.__all__
 
 # Ensure that the output directories exist.
 out_dir = Path("output")
-(out_dir / "hr").mkdir(parents=True, exist_ok=True)
-(out_dir / "hrv").mkdir(parents=True, exist_ok=True)
-(out_dir / "br").mkdir(parents=True, exist_ok=True)
-(out_dir / "spo2").mkdir(parents=True, exist_ok=True)
+for call in api_calls:
+    (out_dir / call).mkdir(parents=True, exist_ok=True)
 
 # Start at yesterday, because today's data might not yet be complete.
 current = datetime.datetime.now() - datetime.timedelta(days=1)
@@ -46,10 +48,8 @@ allowance = 10
 while True:
     print("Current day:", current.strftime("%Y-%m-%d"))
     any_available = False
-    any_available |= fetch_and_dump(out_dir / "hr", hr, current)
-    any_available |= fetch_and_dump(out_dir / "hrv", hrv, current)
-    any_available |= fetch_and_dump(out_dir / "br", br, current)
-    any_available |= fetch_and_dump(out_dir / "spo2", spo2, current)
+    for call in api_calls:
+        any_available |= fetch_and_dump(out_dir / call, getattr(api, call), current)
     if not any_available:
         allowance -= 1
         if allowance == 0:
